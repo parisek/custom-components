@@ -1,0 +1,142 @@
+<?php
+
+/**
+ * @file
+ * Contains custom_components.module.
+ */
+
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\TranslatableInterface;
+use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Language\LanguageInterface;
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function custom_components_module_implements_alter(&$implementations, $hook) {
+  // Added to modify weight of form_alter execution
+  // http://drupal.stackexchange.com/questions/99980/how-do-i-set-locale-settings-fieldset-in-the-user-profile-form-to-uncollapsi.
+  if ($hook == 'form_alter') {
+    $group = $implementations['custom_components'];
+    unset($implementations['custom_components']);
+    $implementations['custom_components'] = $group;
+  }
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function custom_components_page_attachments_alter(array &$page) {
+
+  $langcode = \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  $entity = NULL;
+  if ($route_name == 'entity.node.canonical') {
+    $entity = \Drupal::routeMatch()->getParameter('node');
+  }
+  elseif ($route_name == 'entity.taxonomy_term.canonical') {
+    $entity = \Drupal::routeMatch()->getParameter('taxonomy_term');
+  }
+  elseif ($route_name == 'entity.node.preview') {
+    $entity = \Drupal::routeMatch()->getParameter('node_preview');
+  }
+  elseif ($route_name == 'entity.commerce_product.canonical') {
+    $entity = \Drupal::routeMatch()->getParameter('commerce_product');
+  }
+
+  if ($entity instanceof EntityPublishedInterface) {
+    if (!$entity->isPublished()) {
+      \Drupal::messenger()->addWarning(
+        new TranslatableMarkup('This page has not been published yet, only privileged users can see it.')
+      );
+    }
+  }
+  if ($entity instanceof TranslatableInterface) {
+    if (!$entity->hasTranslation($langcode)) {
+      \Drupal::messenger()->addWarning(
+        new TranslatableMarkup('This page has no translation for the current language, only privileged users can see it.')
+      );
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function custom_components_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+  if (in_array($form_id, ['block_form', 'layout_builder_add_block', 'layout_builder_update_block'])) {
+    if (isset($form['settings']['provider'])) {
+      $provider = $form['settings']['provider']['#value'];
+      if (strpos($provider, 'custom_components') !== FALSE) {
+        $form['settings']['label_display']['#default_value'] = FALSE;
+        $form['settings']['label_display']['#access'] = FALSE;
+        $form['settings']['label']['#access'] = FALSE;
+        $form['settings']['admin_label']['#access'] = FALSE;
+      }
+    }
+  }
+  elseif (strpos($form_id, '_edit_form') !== FALSE) {
+    $form_object = $form_state->getFormObject();
+    if ($form_object instanceof EntityForm) {
+      $account = \Drupal::currentUser();
+      $entity = $form_object->getEntity();
+      $entity_type_id = $entity->getEntityTypeId();
+
+      $route_name = "layout_builder.overrides.$entity_type_id.view";
+      $route_parameters = [
+        $entity_type_id => $entity->id(),
+      ];
+
+      // If current user has access to route, then add the operation link. The
+      // access check will only return TRUE if the bundle is Layout Builder-
+      // enabled, overrides are allowed, and user has necessary permissions.
+      $access_manager = \Drupal::service('access_manager');
+      if (!$access_manager->checkNamedRoute($route_name, $route_parameters, $account)) {
+        return;
+      }
+
+      $form['html'] = [
+        '#type' => 'markup',
+        '#markup' => '<p>' . new TranslatableMarkup('The visual part can be edited via the <a href="@url">layout</a> tab', ['@url' => Url::fromRoute($route_name, $route_parameters)->toString()]) . '</p>',
+        '#weight' => 99,
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_file_download().
+ */
+function custom_components_file_download($uri) {
+  if (Drupal::currentUser()->isAnonymous()) {
+    $response = new RedirectResponse('/user/login');
+    $response->send();
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function custom_components_theme() {
+  return [
+    'custom_component' => [
+      'base hook' => 'custom_component',
+      'variables' => [
+        'content' => [],
+        'template' => '',
+      ],
+    ],
+    'custom_page' => [
+      'base hook' => 'custom_page',
+      'variables' => [
+        'content' => [],
+        'template' => '',
+      ],
+    ],
+  ];
+}

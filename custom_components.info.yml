@@ -1,0 +1,13 @@
+name: "Component: Global"
+type: module
+description: "Component blocks"
+core_version_requirement: ^10 || ^11
+package: "PORTA"
+
+dependencies:
+  - drupal:block
+  - drupal:components
+  - drupal:config_pages
+  - drupal:extra_field
+  - drupal:twig_real_content
+  - drupal:twig_tweak

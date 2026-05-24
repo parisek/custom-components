@@ -1,0 +1,232 @@
+<?php
+
+namespace Drupal\Tests\custom_components\Unit;
+
+use Drupal\custom_components\TwigExtension;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Twig\Environment;
+use Twig\Loader\ArrayLoader;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Tests for the TwigExtension.
+ *
+ * @coversDefaultClass \Drupal\custom_components\TwigExtension
+ * @group custom_components
+ */
+class TwigExtensionTest extends TestCase {
+
+  /**
+   * The TwigExtension under test.
+   */
+  protected TwigExtension $twigExtension;
+
+  /**
+   * Mock date formatter.
+   */
+  protected DateFormatterInterface $dateFormatter;
+
+  /**
+   * Mock language manager.
+   */
+  protected LanguageManagerInterface $languageManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $this->dateFormatter = $this->createMock(DateFormatterInterface::class);
+    $this->languageManager = $this->createMock(LanguageManagerInterface::class);
+
+    $language = $this->createMock(LanguageInterface::class);
+    $language->method('getId')->willReturn('cs');
+    $this->languageManager->method('getCurrentLanguage')->willReturn($language);
+
+    $this->twigExtension = new TwigExtension($this->dateFormatter, $this->languageManager);
+  }
+
+  /**
+   * Helper to create a real Twig Environment with given templates.
+   */
+  protected function createTwigEnv(array $templates): Environment {
+    $loader = new ArrayLoader($templates);
+    return new Environment($loader);
+  }
+
+  /**
+   * @covers ::getComponentTemplate
+   */
+  public function testComponentTemplateSuccess(): void {
+    $env = $this->createTwigEnv([
+      '@component/test-comp/test-comp.twig' => 'Hello {{ content.title }}',
+    ]);
+
+    $result = $this->twigExtension->getComponentTemplate($env, [], 'test_comp', ['title' => 'World']);
+    $this->assertStringContainsString('Hello World', $result);
+  }
+
+  /**
+   * @covers ::getComponentTemplate
+   */
+  public function testComponentTemplateFallsBackToAlert(): void {
+    $env = $this->createTwigEnv([
+      '@component/alert/alert.twig' => 'ALERT: {{ content.message }}',
+    ]);
+
+    $result = $this->twigExtension->getComponentTemplate($env, [], 'missing', []);
+    $this->assertStringContainsString('ALERT:', $result);
+    $this->assertStringContainsString('missing', $result);
+  }
+
+  /**
+   * @covers ::getComponentTemplate
+   */
+  public function testComponentTemplateDoubleFallback(): void {
+    $env = $this->createTwigEnv([]);
+
+    $result = $this->twigExtension->getComponentTemplate($env, [], 'missing', []);
+    $this->assertStringContainsString('missing', $result);
+    $this->assertStringContainsString('<div>', $result);
+  }
+
+  /**
+   * @covers ::getPageTemplate
+   */
+  public function testPageTemplateSuccess(): void {
+    $env = $this->createTwigEnv([
+      '@page/test-page/test-page.twig' => 'Page {{ content.title }}',
+    ]);
+
+    $result = $this->twigExtension->getPageTemplate($env, [], 'test_page', ['title' => 'Home']);
+    $this->assertStringContainsString('Page Home', $result);
+  }
+
+  /**
+   * @covers ::getPageTemplate
+   */
+  public function testPageTemplateFallsBackToAlert(): void {
+    $env = $this->createTwigEnv([
+      '@component/alert/alert.twig' => 'ALERT: {{ content.message }}',
+    ]);
+
+    $result = $this->twigExtension->getPageTemplate($env, [], 'missing_page', []);
+    $this->assertStringContainsString('ALERT:', $result);
+    $this->assertStringContainsString('missing-page', $result);
+  }
+
+  /**
+   * @covers ::getPageTemplate
+   */
+  public function testPageTemplateDoubleFallback(): void {
+    $env = $this->createTwigEnv([]);
+
+    $result = $this->twigExtension->getPageTemplate($env, [], 'missing_page', []);
+    $this->assertStringContainsString('missing-page', $result);
+    $this->assertStringContainsString('<div>', $result);
+  }
+
+  /**
+   * @covers ::getComponentTemplate
+   */
+  public function testTemplateNameUnderscoresReplaced(): void {
+    $env = $this->createTwigEnv([
+      '@component/my-comp/my-comp.twig' => 'OK',
+    ]);
+
+    $result = $this->twigExtension->getComponentTemplate($env, [], 'my_comp', []);
+    $this->assertSame('OK', $result);
+  }
+
+  /**
+   * @covers ::getUniqueId
+   */
+  public function testUniqueIdFormat(): void {
+    $id = $this->twigExtension->getUniqueId();
+    $this->assertSame(7, strlen($id));
+    $this->assertMatchesRegularExpression('/^[a-z][0-9a-f]{6}$/', $id);
+  }
+
+  /**
+   * @covers ::getUniqueId
+   */
+  public function testUniqueIdNoDuplicates(): void {
+    $ids = [];
+    for ($i = 0; $i < 1000; $i++) {
+      $ids[] = $this->twigExtension->getUniqueId();
+    }
+    $this->assertCount(1000, array_unique($ids));
+  }
+
+  /**
+   * @covers ::formatDate
+   */
+  public function testFormatDate(): void {
+    $this->dateFormatter->expects($this->once())
+      ->method('format')
+      ->with(1700000000, 'custom', 'j. F Y', NULL, 'cs')
+      ->willReturn('14. listopadu 2023');
+
+    $result = $this->twigExtension->formatDate(1700000000, 'j. F Y');
+    $this->assertSame('14. listopadu 2023', $result);
+  }
+
+  /**
+   * @covers ::formatDate
+   */
+  public function testFormatDateWithStringTimestamp(): void {
+    $this->dateFormatter->expects($this->once())
+      ->method('format')
+      ->with($this->isType('int'), 'custom', 'Y-m-d', NULL, 'cs')
+      ->willReturn('2023-01-15');
+
+    $result = $this->twigExtension->formatDate('2023-01-15', 'Y-m-d');
+    $this->assertSame('2023-01-15', $result);
+  }
+
+  /**
+   * Verify that a missing component template error message says "Component".
+   */
+  public function testComponentFallbackErrorSaysComponent(): void {
+    $env = $this->createTwigEnv([]);
+    $result = $this->twigExtension->getComponentTemplate($env, [], 'nonexistent', []);
+    $this->assertStringContainsString('Component', $result);
+    $this->assertStringNotContainsString('Page', $result);
+  }
+
+  /**
+   * Verify that a missing page template error message says "Page".
+   */
+  public function testPageFallbackErrorSaysPage(): void {
+    $env = $this->createTwigEnv([]);
+    $result = $this->twigExtension->getPageTemplate($env, [], 'nonexistent', []);
+    $this->assertStringContainsString('Page', $result);
+    $this->assertStringNotContainsString('Component', $result);
+  }
+
+  /**
+   * Verify component alert fallback message says "Component", not "Page".
+   */
+  public function testComponentAlertFallbackSaysComponent(): void {
+    $env = $this->createTwigEnv([
+      '@component/alert/alert.twig' => '{{ content.message }}',
+    ]);
+    $result = $this->twigExtension->getComponentTemplate($env, [], 'missing_one', []);
+    $this->assertStringContainsString('Component', $result);
+  }
+
+  /**
+   * Verify page alert fallback message says "Page", not "Component".
+   */
+  public function testPageAlertFallbackSaysPage(): void {
+    $env = $this->createTwigEnv([
+      '@component/alert/alert.twig' => '{{ content.message }}',
+    ]);
+    $result = $this->twigExtension->getPageTemplate($env, [], 'missing_one', []);
+    $this->assertStringContainsString('Page', $result);
+  }
+
+}

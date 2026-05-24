@@ -1,0 +1,28 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  install:
+    name: Verify package resolves and installs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc  # v2.37.1
+        with:
+          php-version: '8.3'
+          coverage: none
+      - run: composer validate --strict --no-check-publish
+      - run: composer config repositories.drupal composer https://packages.drupal.org/8
+      - name: Allow Composer plugins required by drupal/core-dev
+        run: |
+          composer config --no-plugins allow-plugins.composer/installers true
+          composer config --no-plugins allow-plugins.cweagans/composer-patches true
+          composer config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer config --no-plugins allow-plugins.drupal/core-composer-scaffold true
+          composer config --no-plugins allow-plugins.drupal/core-project-message true
+          composer config --no-plugins allow-plugins.drupal/core-recipe-unpack true
+          composer config --no-plugins allow-plugins.drupal/core-vendor-hardening true
+          composer config --no-plugins allow-plugins.joachim-n/composer-manifest true
+          composer config --no-plugins allow-plugins.phpstan/extension-installer true
+          composer config --no-plugins allow-plugins.php-http/discovery true
+          composer config --no-plugins allow-plugins.tbachert/spi true
+      - run: composer install --no-progress
