@@ -4,7 +4,7 @@
     "description": "Provides functionality for components.",
     "license": "GPL-2.0-or-later",
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.3",
         "drupal/components": "^3.2",
         "drupal/config_pages": "^2.19",
         "drupal/core": "^10 || ^11",
