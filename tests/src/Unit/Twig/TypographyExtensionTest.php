@@ -124,7 +124,8 @@ class TypographyExtensionTest extends TestCase {
    *
    * YAML config from the theme must reach the upstream PHP_Typography
    * Settings object. We verify by disabling smart_quotes and asserting
-   * ASCII quotes survive unchanged.
+   * the smart-quote codepoints are absent (the inverse of the
+   * "missing YAML uses defaults" test, where they ARE present).
    */
   public function testYamlConfigReachesUpstream(): void {
     $this->pointAtFakeTheme();
@@ -134,7 +135,8 @@ class TypographyExtensionTest extends TestCase {
     );
 
     $result = $this->extension->applyTypography('"hello"');
-    $this->assertStringContainsString('"hello"', $result, 'ASCII quotes survived because smart_quotes disabled in YAML');
+    $this->assertStringNotContainsString("\xe2\x80\x9c", $result, 'left double smart quote absent because smart_quotes disabled in YAML');
+    $this->assertStringNotContainsString("\xe2\x80\x9d", $result, 'right double smart quote absent because smart_quotes disabled in YAML');
   }
 
   /**
@@ -158,5 +160,30 @@ class TypographyExtensionTest extends TestCase {
 
     $this->extension->applyTypography('hello');
     $this->extension->applyTypography('world');
+  }
+
+  /**
+   * @covers ::applyTypography
+   *
+   * Per-theme cache must key on theme machine name: two different active
+   * themes within the same request must produce two separate path lookups.
+   */
+  public function testCacheIsKeyedPerTheme(): void {
+    $themeA = $this->createMock(ActiveTheme::class);
+    $themeA->method('getName')->willReturn('theme_a');
+    $themeB = $this->createMock(ActiveTheme::class);
+    $themeB->method('getName')->willReturn('theme_b');
+    // Alternate themes across calls.
+    $this->themeManager
+      ->method('getActiveTheme')
+      ->willReturnOnConsecutiveCalls($themeA, $themeB, $themeA);
+    $this->extensionPathResolver
+      ->expects($this->exactly(2))
+      ->method('getPath')
+      ->willReturn($this->tmpDir);
+
+    $this->extension->applyTypography('first');
+    $this->extension->applyTypography('second');
+    $this->extension->applyTypography('third'); // Returns to theme_a — should hit cache.
   }
 }
