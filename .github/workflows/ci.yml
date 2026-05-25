@@ -33,12 +33,18 @@ jobs:
 
       - run: composer install --no-progress
 
+      - name: Inspect post-install web/ layout
+        run: ls -la web/ && ls -la web/core/tests/ | head -20
+
       - name: Bridge web/autoload.php to vendor/autoload.php
         run: |
           cat > web/autoload.php <<'PHP'
           <?php
           return require __DIR__ . '/../vendor/autoload.php';
           PHP
+
+      - name: Ensure Drupal extension-discovery dirs exist
+        run: mkdir -p web/profiles web/sites web/themes web/libraries web/modules/contrib
 
       - name: Symlink module into Drupal extension discovery path
         run: |
