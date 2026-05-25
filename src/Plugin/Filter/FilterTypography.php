@@ -48,6 +48,8 @@ class FilterTypography extends FilterBase implements ContainerFactoryPluginInter
    * {@inheritdoc}
    */
   public function process($text, $langcode) {
+    $result = new FilterProcessResult($text);
+
     $text = $this->typography->applyTypography($text);
 
     $html_dom = Html::load($text);
@@ -61,9 +63,8 @@ class FilterTypography extends FilterBase implements ContainerFactoryPluginInter
       $b->setAttribute('class', implode(' ', $classes));
     }
 
-    $text = Html::serialize($html_dom);
-
-    return (new FilterProcessResult($text))->setProcessedText($text);
+    $result->setProcessedText(Html::serialize($html_dom));
+    return $result;
   }
 
 }
