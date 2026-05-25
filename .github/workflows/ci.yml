@@ -53,4 +53,13 @@ jobs:
             ln -sf "$PWD/$f" "web/modules/contrib/custom_components/$f"
           done
 
+      - name: Diagnose PhpUnitCompatibilityTrait
+        run: |
+          echo "--- web/core/tests/Drupal/Tests/PhpUnitCompatibilityTrait.php ---"
+          cat web/core/tests/Drupal/Tests/PhpUnitCompatibilityTrait.php 2>/dev/null || echo "FILE MISSING"
+          echo "--- drupal/core version installed ---"
+          composer show drupal/core | head -5
+          echo "--- phpunit version ---"
+          vendor/bin/phpunit --version
+
       - run: vendor/bin/phpunit
