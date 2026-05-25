@@ -29,7 +29,13 @@
         }
     },
     "extra": {
-        "installer-name": "custom_components"
+        "installer-name": "custom_components",
+        "installer-paths": {
+            "web/core": ["type:drupal-core"],
+            "web/modules/contrib/{$name}": ["type:drupal-module"],
+            "web/themes/contrib/{$name}": ["type:drupal-theme"],
+            "web/libraries/{$name}": ["type:drupal-library"]
+        }
     },
     "repositories": [{
         "name": "drupal",

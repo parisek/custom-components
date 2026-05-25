@@ -1,17 +1,22 @@
 name: CI
 on: [push, pull_request]
 jobs:
-  install:
-    name: Verify package resolves and installs
+  test:
+    name: Unit + Kernel tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc  # v2.37.1
         with:
           php-version: '8.3'
+          extensions: gd, pdo_sqlite
           coverage: none
+
       - run: composer validate --strict --no-check-publish
+
       - run: composer config repositories.drupal composer https://packages.drupal.org/8
+
       - name: Allow Composer plugins required by drupal/core-dev
         run: |
           composer config --no-plugins allow-plugins.composer/installers true
@@ -25,4 +30,14 @@ jobs:
           composer config --no-plugins allow-plugins.phpstan/extension-installer true
           composer config --no-plugins allow-plugins.php-http/discovery true
           composer config --no-plugins allow-plugins.tbachert/spi true
+
       - run: composer install --no-progress
+
+      - name: Symlink module into Drupal extension discovery path
+        run: |
+          mkdir -p web/modules/contrib/custom_components
+          for f in src tests templates custom_components.info.yml custom_components.module custom_components.services.yml composer.json; do
+            ln -sf "$PWD/$f" "web/modules/contrib/custom_components/$f"
+          done
+
+      - run: vendor/bin/phpunit
