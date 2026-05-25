@@ -59,7 +59,7 @@ final class TypographyExtension extends AbstractExtension {
    *   Filtered string, or the original render array.
    */
   public function applyTypography(mixed $string, array $arguments = [], bool $useDefaults = TRUE): mixed {
-    if (is_array($string)) {
+    if (\is_array($string)) {
       return $string;
     }
     return $this->upstreamForActiveTheme()->applyTypography($string, $arguments, $useDefaults);
@@ -69,7 +69,8 @@ final class TypographyExtension extends AbstractExtension {
     $themeName = $this->themeManager->getActiveTheme()->getName();
     if (!isset($this->cache[$themeName])) {
       $path = $this->extensionPathResolver->getPath('theme', $themeName) . '/static/typography.yml';
-      $config = file_exists($path) ? ((array) Yaml::parse(file_get_contents($path) ?: '')) : [];
+      $parsed = \file_exists($path) ? Yaml::parseFile($path) : NULL;
+      $config = \is_array($parsed) ? $parsed : [];
       $this->cache[$themeName] = new UpstreamTypographyExtension($config);
     }
     return $this->cache[$themeName];

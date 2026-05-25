@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file. The format foll
 ## [Unreleased]
 
 ### Changed
+- **BREAKING:** Minimum PHP version raised from 8.1 to 8.3, matching the new upstream `parisek/twig-typography ^1.2` floor. Consumers on PHP 8.1/8.2 must upgrade their host before upgrading this module.
 - Typography filter (`|typography` Twig filter + `filter_typography` text-format plugin) now delegates to `parisek/twig-typography ^1.2` instead of duplicating its logic. No behaviour change for callers — same filter name, same YAML path (`{active_theme}/static/typography.yml`), same defaults.
 - Direct dependency on `mundschenk-at/php-typography` removed; it is now pulled transitively via `parisek/twig-typography`.
 
