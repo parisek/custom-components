@@ -33,9 +33,6 @@ jobs:
 
       - run: composer install --no-progress
 
-      - name: Inspect post-install web/ layout
-        run: ls -la web/ && ls -la web/core/tests/ | head -20
-
       - name: Bridge web/autoload.php to vendor/autoload.php
         run: |
           cat > web/autoload.php <<'PHP'
@@ -52,14 +49,5 @@ jobs:
           for f in src tests templates custom_components.info.yml custom_components.module custom_components.services.yml composer.json; do
             ln -sf "$PWD/$f" "web/modules/contrib/custom_components/$f"
           done
-
-      - name: Diagnose PhpUnitCompatibilityTrait
-        run: |
-          echo "--- web/core/tests/Drupal/Tests/PhpUnitCompatibilityTrait.php ---"
-          cat web/core/tests/Drupal/Tests/PhpUnitCompatibilityTrait.php 2>/dev/null || echo "FILE MISSING"
-          echo "--- drupal/core version installed ---"
-          composer show drupal/core | head -5
-          echo "--- phpunit version ---"
-          vendor/bin/phpunit --version
 
       - run: vendor/bin/phpunit
