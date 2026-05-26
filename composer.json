@@ -50,9 +50,17 @@
     }],
     "config": {
         "allow-plugins": {
-            "drupal/core-composer-scaffold": false,
-            "phpstan/extension-installer": false,
-            "dealerdirect/phpcodesniffer-composer-installer": false
+            "composer/installers": true,
+            "drupal/core-composer-scaffold": true,
+            "drupal/core-project-message": true,
+            "drupal/core-recipe-unpack": true,
+            "drupal/core-vendor-hardening": true,
+            "cweagans/composer-patches": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "joachim-n/composer-manifest": true,
+            "phpstan/extension-installer": true,
+            "php-http/discovery": true,
+            "tbachert/spi": true
         }
     }
 }
