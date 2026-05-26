@@ -12,6 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class TaxonomyTermController view alter.
+ *
+ * @phpstan-consistent-constructor
  */
 class TaxonomyTermController extends ControllerBase {
 
