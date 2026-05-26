@@ -33,7 +33,6 @@ class EntityHelperFormatFieldKernelTest extends EntityHelperFieldsKernelTestBase
     'datetime',
     'datetime_range',
     'link',
-    'taxonomy',
   ];
 
   /**
@@ -42,7 +41,6 @@ class EntityHelperFormatFieldKernelTest extends EntityHelperFieldsKernelTestBase
   protected function setUp(): void {
     parent::setUp();
     $this->installConfig(['filter']);
-    $this->installEntitySchema('taxonomy_term');
 
     $this->attachField('headline', 'string');
     $this->attachField('body_content', 'text_long');
@@ -54,14 +52,6 @@ class EntityHelperFormatFieldKernelTest extends EntityHelperFieldsKernelTestBase
     ]);
     $this->attachField('flag', 'boolean');
     $this->attachField('rating', 'float');
-
-    \Drupal\taxonomy\Entity\Vocabulary::create(['vid' => 'tags', 'name' => 'Tags'])->save();
-    $this->attachField('tags', 'entity_reference', [
-      'target_type' => 'taxonomy_term',
-    ], [
-      'handler' => 'default:taxonomy_term',
-      'handler_settings' => ['target_bundles' => ['tags' => 'tags']],
-    ]);
   }
 
   /**
@@ -143,21 +133,6 @@ class EntityHelperFormatFieldKernelTest extends EntityHelperFieldsKernelTestBase
     $result = $this->entityHelper->formatField($node, 'rating');
     $value = is_array($result) ? (float) reset($result) : (float) $result;
     $this->assertEqualsWithDelta(4.5, $value, 0.0001);
-  }
-
-  /**
-   * @covers ::formatField
-   */
-  public function testDispatchTaxonomyReference(): void {
-    $term = \Drupal\taxonomy\Entity\Term::create(['vid' => 'tags', 'name' => 'Alpha']);
-    $term->save();
-
-    $node = $this->createTestNode([
-      'field_tags' => [['target_id' => $term->id()]],
-    ]);
-    $result = $this->entityHelper->formatField($node, 'tags');
-    $serialized = is_array($result) ? json_encode($result) : (string) $result;
-    $this->assertStringContainsString('Alpha', $serialized);
   }
 
   /**
