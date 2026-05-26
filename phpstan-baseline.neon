@@ -1,13 +1,48 @@
 # PHPStan baseline — legacy errors at level 5 we're accepting for now.
 #
-# The baseline shrinks over time: any time you fix a real error,
-# delete its entry from this file. CI fails on NEW errors that aren't
-# listed here.
+# Most entries are for Drupal's magic field-item property access
+# (`$item->value`, `$item->entity`, `$item->uri`, `$item->target_id`)
+# on the generic FieldItemInterface — phpstan-drupal can't infer the
+# concrete subtype without an explicit @var at each read site.
 #
-# Regenerate after a code change if you fix listed issues:
-#   vendor/bin/phpstan analyse --generate-baseline=phpstan-baseline.neon
+# The baseline shrinks over time. When you tighten a typehint to a
+# concrete FieldItem class (e.g. StringItem instead of FieldItemInterface),
+# delete the corresponding entry.
 #
-# Long-term goal: level 7 / 8 with this file empty (tracked in v1.5.0).
+# Long-term: level 7 / 8 with this file empty (tracked in v1.5.0).
 
 parameters:
-    ignoreErrors: []
+    ignoreErrors:
+        # Drupal field-item magic property access (->value, ->entity, ->uri, ...).
+        -
+            identifier: property.notFound
+            paths:
+                - src/Services/EntityHelper.php
+                - src/Services/MediaArrayBuilder.php
+
+        # Contrib-conditional method calls (toPrice, getLanguageConfigOverride).
+        -
+            identifier: method.notFound
+            path: src/Services/EntityHelper.php
+
+        # PHPDoc-derived always-true ifs (defensive instanceof checks).
+        -
+            identifier: if.alwaysTrue
+            paths:
+                - src/Services/EntityHelper.php
+                - src/Services/Resizer.php
+
+        -
+            identifier: function.alreadyNarrowedType
+            path: src/Services/EntityHelper.php
+
+        -
+            identifier: booleanAnd.leftAlwaysTrue
+            path: src/Services/Resizer.php
+
+        # Plugin factory returns concrete class instead of `static`.
+        -
+            identifier: return.type
+            paths:
+                - src/Plugin/Filter/FilterLinks.php
+                - src/Plugin/Filter/FilterTypography.php

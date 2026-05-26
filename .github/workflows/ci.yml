@@ -22,14 +22,7 @@ jobs:
 
       - run: vendor/bin/phpunit --coverage-clover coverage.xml --coverage-text
 
-      - name: PHPStan — analyse + capture baseline artifact on failure
-        run: |
-          if ! vendor/bin/phpstan analyse --no-progress; then
-            echo "phpstan failed — regenerating baseline for inspection"
-            vendor/bin/phpstan analyse --generate-baseline=phpstan-baseline.generated.neon --allow-empty-baseline --no-progress || true
-            cat phpstan-baseline.generated.neon
-            exit 1
-          fi
+      - run: vendor/bin/phpstan analyse --no-progress
 
       - name: Enforce line-coverage threshold
         # Ratchet floor — raised as each batch of kernel tests lands.
