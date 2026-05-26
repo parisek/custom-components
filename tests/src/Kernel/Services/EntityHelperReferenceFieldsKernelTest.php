@@ -75,33 +75,11 @@ class EntityHelperReferenceFieldsKernelTest extends EntityHelperFieldsKernelTest
     $this->assertTrue($value === [] || $value === '');
   }
 
-  /**
-   * @covers ::getEntityReferenceField
-   */
-  public function testGetEntityReferenceFieldReturnsReferencedEntityData(): void {
-    $term = Term::create(['vid' => 'tags', 'name' => 'Gamma']);
-    $term->save();
-
-    $node = $this->createTestNode([
-      'field_topics' => [['target_id' => $term->id()]],
-    ]);
-
-    $value = $this->entityHelper->getEntityReferenceField($node, 'topics');
-    // Result is an array containing the referenced entity (possibly
-    // wrapped). Walk it and look for the Term we created by id.
-    $found_id = NULL;
-    $stack = is_array($value) ? $value : [$value];
-    while ($stack) {
-      $item = array_shift($stack);
-      if ($item instanceof \Drupal\Core\Entity\EntityInterface) {
-        $found_id = (int) $item->id();
-        break;
-      }
-      if (is_array($item)) {
-        $stack = array_merge($stack, $item);
-      }
-    }
-    $this->assertSame((int) $term->id(), $found_id);
-  }
+  // Removed testGetEntityReferenceFieldReturnsReferencedEntityData
+  // (#46 cleanup): the assertion walked the result with a stack-based
+  // find-by-id because the return shape is polymorphic. Brittle and
+  // low signal — the dispatch wiring it really tested is exercised by
+  // testGetTermFieldReturnsLabels above and by getMediaField kernel
+  // coverage in #32.
 
 }
