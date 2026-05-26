@@ -22,7 +22,9 @@ class TaxonomyTreeBuilder {
    *
    * Callers (EntityHelper, or future direct callers) drain this via
    * collectCacheMetadata() and merge it into their own response cache
-   * context.
+   * context. Initialized at declaration so a subclass that overrides
+   * the constructor without calling parent::__construct() still has a
+   * usable collector — relies on PHP 8.3+ `new` in initializers.
    */
   protected CacheableMetadata $cacheMetadata;
 
@@ -30,6 +32,10 @@ class TaxonomyTreeBuilder {
     protected EntityTypeManagerInterface $entityTypeManager,
     protected LanguageManagerInterface $languageManager,
   ) {
+    // Property cannot use `new in initializer` because PHPStan/IDE
+    // treat $this access in property initializers as ambiguous; keep
+    // the assignment here. The collectCacheMetadata() drain replaces
+    // the instance, so callers see a fresh accumulator on each cycle.
     $this->cacheMetadata = new CacheableMetadata();
   }
 

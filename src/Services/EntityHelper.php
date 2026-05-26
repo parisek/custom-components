@@ -1957,10 +1957,17 @@ class EntityHelper {
    *   Array of term items, optionally nested with 'children' key.
    */
   public function getTaxonomy($vocabulary, $custom_parameters = []) {
-    $items = $this->taxonomyTreeBuilder->build($vocabulary, $custom_parameters);
-    $this->cacheMetadata->addCacheableDependency(
-      $this->taxonomyTreeBuilder->collectCacheMetadata(),
-    );
+    try {
+      $items = $this->taxonomyTreeBuilder->build($vocabulary, $custom_parameters);
+    }
+    finally {
+      // Drain the builder's accumulator even on exception so a partial
+      // run does not leak its tags into the next getTaxonomy() call
+      // (the builder is a shared service).
+      $this->cacheMetadata->addCacheableDependency(
+        $this->taxonomyTreeBuilder->collectCacheMetadata(),
+      );
+    }
     return $items;
   }
 
