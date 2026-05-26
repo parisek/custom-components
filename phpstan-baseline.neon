@@ -1,0 +1,44 @@
+# PHPStan baseline (level 5) — legacy errors we accept for now.
+#
+# Most entries are for Drupal's magic field-item property access
+# (`$item->value`, `$item->entity`, `$item->uri`, `$item->target_id`)
+# on the generic FieldItemInterface — phpstan-drupal can't infer the
+# concrete subtype without an explicit @var at each read site.
+#
+# The baseline shrinks over time. When you tighten a typehint to a
+# concrete FieldItem class (e.g. StringItem instead of FieldItemInterface),
+# delete the corresponding entry.
+#
+# Long-term: level 7 / 8 with this file empty (tracked in v1.5.0).
+
+parameters:
+    ignoreErrors:
+        # Drupal field-item magic property access (->value, ->entity, ->uri, ...).
+        -
+            identifier: property.notFound
+            paths:
+                - src/Services/EntityHelper.php
+                - src/Services/MediaArrayBuilder.php
+
+        # Contrib-conditional method calls (toPrice, getLanguageConfigOverride).
+        -
+            identifier: method.notFound
+            path: src/Services/EntityHelper.php
+
+        # PHPDoc-derived always-true ifs (defensive instanceof checks).
+        # treatPhpDocTypesAsCertain: false suppresses Resizer's
+        # entries — leaving only the EntityHelper ones.
+        -
+            identifier: if.alwaysTrue
+            path: src/Services/EntityHelper.php
+
+        -
+            identifier: function.alreadyNarrowedType
+            path: src/Services/EntityHelper.php
+
+        # Plugin factory returns concrete class instead of `static`.
+        -
+            identifier: return.type
+            paths:
+                - src/Plugin/Filter/FilterLinks.php
+                - src/Plugin/Filter/FilterTypography.php
