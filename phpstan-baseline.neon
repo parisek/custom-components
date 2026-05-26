@@ -1,4 +1,4 @@
-# PHPStan baseline — legacy errors at level 5 we're accepting for now.
+# PHPStan baseline (level 5) — legacy errors we accept for now.
 #
 # Most entries are for Drupal's magic field-item property access
 # (`$item->value`, `$item->entity`, `$item->uri`, `$item->target_id`)
