@@ -13,6 +13,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Class TaxonomyTermController view alter.
  *
+ * Subclasses MUST keep the constructor signature stable so ::create()'s
+ * `new static(...)` succeeds. Documentation-only contract.
+ *
  * @phpstan-consistent-constructor
  */
 class TaxonomyTermController extends ControllerBase {

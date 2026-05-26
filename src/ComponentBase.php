@@ -16,6 +16,14 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 /**
  * Abstract base class for component blocks.
  *
+ * Subclasses MUST keep this constructor signature stable so the static
+ * ::create() factory's `new static(...)` call succeeds. The annotation
+ * below tells PHPStan to trust that contract — but only within this
+ * repo's PHPStan scope. Downstream consumers (htdvere, etc.) are NOT
+ * checked; a subclass there that adds a constructor param will compile
+ * and only fail at runtime when Drupal's plugin manager instantiates
+ * it. Pass extra deps through ::create() before forwarding to parent.
+ *
  * @phpstan-consistent-constructor
  */
 abstract class ComponentBase extends BlockBase implements ContainerFactoryPluginInterface {

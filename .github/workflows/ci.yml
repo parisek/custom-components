@@ -17,25 +17,8 @@ jobs:
 
       - run: composer install --no-progress
 
-      - name: Bridge web/autoload.php to vendor/autoload.php
-        run: |
-          mkdir -p web
-          cat > web/autoload.php <<'PHP'
-          <?php
-          return require __DIR__ . '/../vendor/autoload.php';
-          PHP
-
-      - name: Ensure Drupal extension-discovery dirs exist
-        run: mkdir -p web/profiles web/sites web/themes web/libraries web/modules/contrib
-
-      - name: Symlink module into Drupal extension discovery path
-        run: |
-          target="web/modules/contrib/custom_components"
-          mkdir -p "$target"
-          for f in src tests templates custom_components.info.yml custom_components.module custom_components.services.yml composer.json; do
-            rm -rf "$target/$f"
-            ln -s "$PWD/$f" "$target/$f"
-          done
+      - name: Wire module into Drupal extension discovery
+        run: scripts/dev-link-module.sh
 
       - run: vendor/bin/phpunit --coverage-clover coverage.xml --coverage-text
 

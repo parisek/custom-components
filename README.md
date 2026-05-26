@@ -52,17 +52,11 @@ To run locally:
 
 ```bash
 composer install
-# Bridge web/autoload.php to vendor/autoload.php (composer scaffold creates web/ itself):
-printf '<?php\nreturn require __DIR__ . "/../vendor/autoload.php";\n' > web/autoload.php
-# Make Drupal's Extension Discovery see this module:
-mkdir -p web/modules/contrib/custom_components
-for f in src tests templates *.info.yml *.module *.services.yml composer.json; do
-  rm -rf "web/modules/contrib/custom_components/$f"
-  ln -s "$PWD/$f" "web/modules/contrib/custom_components/$f"
-done
-
+scripts/dev-link-module.sh   # symlink module into web/modules/contrib + bridge web/autoload.php
 vendor/bin/phpunit
 ```
+
+The script is what CI runs too, so following it locally produces the same layout.
 
 Run a specific suite:
 

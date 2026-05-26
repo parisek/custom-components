@@ -2,7 +2,14 @@
 
 ## Running tests locally
 
-See the [Tests section in README](README.md#tests) for the one-time setup. CI is self-contained — it scaffolds Drupal via Composer and runs PHPUnit against `web/core/tests/bootstrap.php`. Locally you replicate the same layout once with the symlink dance documented in README.
+CI is self-contained — it scaffolds Drupal via Composer and runs PHPUnit against `web/core/tests/bootstrap.php`. Locally, replicate the same layout once via the checked-in setup script (the very same script CI uses):
+
+```bash
+composer install
+scripts/dev-link-module.sh
+```
+
+The script handles three things: creates the `web/{profiles,sites,themes,libraries,modules/contrib}` directory structure that Drupal's bootstrap scans, bridges `web/autoload.php` to `vendor/autoload.php` (drupal/core 11.3.x stopped shipping that file), and symlinks every top-level module file into `web/modules/contrib/custom_components/` via `find -maxdepth 1` so new files (a future `*.routing.yml`, `config/`, etc.) are picked up without a script edit.
 
 After setup:
 

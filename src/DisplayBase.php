@@ -51,6 +51,10 @@ use Drupal\extra_field\Plugin\ExtraFieldDisplayBase;
  * @method mixed getSelectFieldOptions($langcode, $field_name, $entity_type = 'node')
  * @method mixed getSvgViewBoxDimensions($uri)
  *
+ * Subclasses MUST keep the constructor signature stable so ::create()'s
+ * `new static(...)` succeeds. Documentation-only contract — see the
+ * note on ComponentBase for details.
+ *
  * @phpstan-consistent-constructor
  */
 abstract class DisplayBase extends ExtraFieldDisplayBase implements ContainerFactoryPluginInterface {
