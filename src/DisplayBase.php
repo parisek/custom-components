@@ -50,6 +50,8 @@ use Drupal\extra_field\Plugin\ExtraFieldDisplayBase;
  * @method mixed getTaxonomy($vocabulary, $custom_parameters = [])
  * @method mixed getSelectFieldOptions($langcode, $field_name, $entity_type = 'node')
  * @method mixed getSvgViewBoxDimensions($uri)
+ *
+ * @phpstan-consistent-constructor
  */
 abstract class DisplayBase extends ExtraFieldDisplayBase implements ContainerFactoryPluginInterface {
 

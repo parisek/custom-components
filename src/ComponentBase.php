@@ -15,6 +15,8 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 
 /**
  * Abstract base class for component blocks.
+ *
+ * @phpstan-consistent-constructor
  */
 abstract class ComponentBase extends BlockBase implements ContainerFactoryPluginInterface {
 
