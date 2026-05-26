@@ -4,6 +4,7 @@ namespace Drupal\Tests\custom_components\Kernel\Services;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Tests\custom_components\Kernel\MediaArrayBuilderKernelTestBase;
+use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
 use Drupal\media\MediaSourceInterface;
 
@@ -72,13 +73,15 @@ class MediaArrayBuilderRemoteVideoTest extends MediaArrayBuilderKernelTestBase {
   }
 
   /**
-   * Mock a MediaInterface that returns the given URL via getSource().
+   * Mock a Media entity that returns the given URL via getSource().
    *
-   * PHPUnit MockObject cannot stub `__get`, so dynamic field access
-   * (`$media->field_media_image`, `$media->thumbnail`) is handled by
-   * assigning the stubs directly as dynamic properties on the mock.
-   * Drupal entity mocks tolerate this — they don't define those
-   * properties at the interface level.
+   * We mock the concrete `Media` class (not `MediaInterface`) because
+   * field-property access — `$media->field_media_image`,
+   * `$media->thumbnail` — routes through `ContentEntityBase::__get()`.
+   * Mocking the concrete class gives PHPUnit visibility into `__get`,
+   * which we then stub via `willReturnCallback`. Avoids the PHP 8.2+
+   * dynamic-property deprecation that hits when assigning fields onto
+   * an interface mock.
    *
    * @param string $url
    *   The URL the source field returns.
@@ -91,7 +94,10 @@ class MediaArrayBuilderRemoteVideoTest extends MediaArrayBuilderKernelTestBase {
     $source = $this->createMock(MediaSourceInterface::class);
     $source->method('getSourceFieldValue')->willReturn($url);
 
-    $media = $this->createMock(MediaInterface::class);
+    $media = $this->getMockBuilder(Media::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['getSource', 'hasField', '__get'])
+      ->getMock();
     $media->method('getSource')->willReturn($source);
     $media->method('hasField')->willReturnCallback(
       static fn ($name) => $name === 'field_media_image',
@@ -107,8 +113,13 @@ class MediaArrayBuilderRemoteVideoTest extends MediaArrayBuilderKernelTestBase {
     $thumbnail = new \stdClass();
     $thumbnail->entity = NULL;
 
-    $media->field_media_image = $field;
-    $media->thumbnail = $thumbnail;
+    $media->method('__get')->willReturnCallback(
+      static fn ($name) => match ($name) {
+        'field_media_image' => $field,
+        'thumbnail' => $thumbnail,
+        default => NULL,
+      },
+    );
 
     return $media;
   }
