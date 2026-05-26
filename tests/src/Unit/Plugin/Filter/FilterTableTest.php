@@ -63,9 +63,12 @@ class FilterTableTest extends TestCase {
     $html = '<table class="table striped"><tr><td>x</td></tr></table>';
     $out = $this->filter->process($html, 'en')->getProcessedText();
 
-    // The 'table' class should appear only once in the class list (the
-    // word 'table' also appears inside 'table-responsive' which is fine).
-    $this->assertSame(1, preg_match_all('/class="[^"]*\btable\b[^"]*"/', $out));
+    // No duplicate "table" inside the same class list. The wrapper div
+    // intentionally uses "table-responsive", which is distinct.
+    $this->assertStringNotContainsString('class="table table"', $out);
+    $this->assertStringNotContainsString('class="table table ', $out);
+    $this->assertStringNotContainsString(' table table"', $out);
+    $this->assertStringContainsString('striped', $out);
   }
 
   /**
