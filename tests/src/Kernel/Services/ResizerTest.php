@@ -34,14 +34,17 @@ class ResizerTest extends ResizerKernelTestBase {
    * @covers ::resizer
    *
    * SVGs are passed through unchanged — no image style is applied.
+   * Resizer expects the image as an array-of-images (see consumer
+   * contract: EntityHelper's image getters return [[...]]). Wrapping
+   * the single image in an outer array is the conventional shape.
    */
   public function testSvgPassthrough(): void {
-    $svg = [
+    $svg = [[
       'src' => '/sites/default/files/icon.svg',
       'type' => 'image/svg+xml',
       'width' => 24,
       'height' => 24,
-    ];
+    ]];
 
     $result = Resizer::resizer($svg, [[100, 100, 0, 'default']]);
 
@@ -57,12 +60,12 @@ class ResizerTest extends ResizerKernelTestBase {
    * falls through and returns the original as the sole fallback.
    */
   public function testExternalUrlReturnsOnlyFallback(): void {
-    $image = [
+    $image = [[
       'src' => 'https://cdn.example.com/photo.jpg',
       'type' => 'image/jpeg',
       'width' => 800,
       'height' => 600,
-    ];
+    ]];
 
     $result = Resizer::resizer($image, [[400, 300, 0, 'default']]);
 
@@ -102,12 +105,12 @@ class ResizerTest extends ResizerKernelTestBase {
   public function testLocalFileProducesVariantsViaImageStyle(): void {
     $file = $this->createTestPngFile('local.png');
 
-    $image = [
+    $image = [[
       'src' => '/sites/default/files/local.png',
       'type' => 'image/png',
       'width' => 1,
       'height' => 1,
-    ];
+    ]];
 
     $result = Resizer::resizer($image, [[100, 100, 768, 'default']]);
 
