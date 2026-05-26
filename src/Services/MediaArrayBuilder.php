@@ -308,8 +308,16 @@ class MediaArrayBuilder {
       return $cache->data;
     }
 
-    $file_path = $this->fileUrlGenerator->generateAbsoluteString($uri);
-    $xmlget = @file_get_contents($file_path);
+    // Read via the stream URI directly. PHP's stream-wrapper integration
+    // handles `public://...` without an HTTP server — needed for kernel
+    // tests, and avoids the unnecessary URL round-trip in production.
+    $xmlget = @file_get_contents($uri);
+    if ($xmlget === FALSE) {
+      // Fallback to the absolute path in case a custom stream wrapper
+      // is at play (preserves the pre-v1.2.0 behavior).
+      $file_path = $this->fileUrlGenerator->generateAbsoluteString($uri);
+      $xmlget = @file_get_contents($file_path);
+    }
     if ($xmlget === FALSE) {
       return NULL;
     }
