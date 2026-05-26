@@ -36,6 +36,10 @@ class EntityHelperTextFieldsKernelTest extends EntityHelperFieldsKernelTestBase 
   protected function setUp(): void {
     parent::setUp();
 
+    // filter module's default formats (plain_text, basic_html, …)
+    // are needed by getTextareaField's renderInIsolation path.
+    $this->installConfig(['filter']);
+
     // Single-value string.
     $this->attachField('headline', 'string');
     // Multi-value string for return_format=array path.
