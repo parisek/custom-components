@@ -11,7 +11,7 @@ jobs:
         with:
           php-version: '8.3'
           extensions: gd, pdo_sqlite
-          coverage: none
+          coverage: xdebug
 
       - run: composer validate --strict --no-check-publish
 
@@ -38,3 +38,20 @@ jobs:
           done
 
       - run: vendor/bin/phpunit
+
+      - name: Enforce line-coverage threshold
+        env:
+          MIN_COVERAGE: '40'
+        run: |
+          php -r '
+            $min = (int) getenv("MIN_COVERAGE");
+            $xml = simplexml_load_file("coverage.xml");
+            $metrics = $xml->project->metrics;
+            $statements = (int) $metrics["statements"];
+            $covered = (int) $metrics["coveredstatements"];
+            $pct = $statements > 0 ? 100 * $covered / $statements : 0;
+            printf("Line coverage: %.2f%% (%d / %d), threshold %d%%\n", $pct, $covered, $statements, $min);
+            exit($pct >= $min ? 0 : 1);
+          '
+
+      - run: vendor/bin/phpstan analyse
