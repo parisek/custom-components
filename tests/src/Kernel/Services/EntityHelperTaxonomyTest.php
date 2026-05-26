@@ -45,24 +45,28 @@ class EntityHelperTaxonomyTest extends EntityHelperKernelTestBase {
    */
   public function testFlatVocabularyReturnsPublishedTermsOnly(): void {
     $this->createVocabulary('cars');
-    $published = $this->createTerm('cars', 'Audi', TRUE);
+    $audi = $this->createTerm('cars', 'Audi', TRUE);
     $this->createTerm('cars', 'Banned brand', FALSE);
-    $also_published = $this->createTerm('cars', 'BMW', TRUE);
+    $bmw = $this->createTerm('cars', 'BMW', TRUE);
 
     $items = $this->entityHelper->getTaxonomy('cars');
 
-    $titles = array_column($items, 'title');
-    $this->assertContains('Audi', $titles);
-    $this->assertContains('BMW', $titles);
-    $this->assertNotContains('Banned brand', $titles);
+    $by_title = [];
+    foreach ($items as $item) {
+      $by_title[$item['title']] = $item;
+    }
+    $this->assertArrayHasKey('Audi', $by_title);
+    $this->assertArrayHasKey('BMW', $by_title);
+    $this->assertArrayNotHasKey('Banned brand', $by_title);
 
-    // Each item exposes id, title, url — the shape MediaArrayBuilder
-    // / TaxonomyTreeBuilder consumers depend on.
-    $this->assertSame(
-      ['id', 'title', 'url'],
-      array_keys($items[0]),
-    );
-    $this->assertSame((int) $published->id(), $items[0]['id']);
+    // The shape consumers (and #6's TaxonomyTreeBuilder) depend on: id,
+    // title, and url at minimum. Additional keys are allowed — locking
+    // exact key order would block additive changes downstream.
+    $this->assertArrayHasKey('id', $by_title['Audi']);
+    $this->assertArrayHasKey('title', $by_title['Audi']);
+    $this->assertArrayHasKey('url', $by_title['Audi']);
+    $this->assertSame((int) $audi->id(), $by_title['Audi']['id']);
+    $this->assertSame((int) $bmw->id(), $by_title['BMW']['id']);
   }
 
   /**

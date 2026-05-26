@@ -73,7 +73,7 @@ class EntityHelperMenuTest extends EntityHelperKernelTestBase {
    */
   public function testFlatMenuReturnsExpectedLinkShape(): void {
     $this->createMenu('main_nav');
-    $this->createMenuLink('main_nav', 'Home', 'internal:/', NULL, 0);
+    $this->createMenuLink('main_nav', 'Home', 'internal:/');
 
     $items = $this->entityHelper->getMenu('main_nav');
 
@@ -88,8 +88,8 @@ class EntityHelperMenuTest extends EntityHelperKernelTestBase {
    */
   public function testHiddenMenuLinksAreSkipped(): void {
     $this->createMenu('with_hidden');
-    $this->createMenuLink('with_hidden', 'Visible', 'internal:/visible', NULL, 0, FALSE);
-    $this->createMenuLink('with_hidden', 'Hidden', 'internal:/hidden', NULL, 0, TRUE);
+    $this->createMenuLink('with_hidden', 'Visible', 'internal:/visible', FALSE);
+    $this->createMenuLink('with_hidden', 'Hidden', 'internal:/hidden', TRUE);
 
     $items = $this->entityHelper->getMenu('with_hidden');
 
@@ -108,21 +108,22 @@ class EntityHelperMenuTest extends EntityHelperKernelTestBase {
   }
 
   /**
-   * Create a menu link content entity.
+   * Create a top-level menu link content entity.
+   *
+   * Hierarchical (nested) menu links are intentionally not supported here —
+   * MenuLinkContent's parent format is "menu_link_content:{uuid}" and adding
+   * that wiring belongs in the PR that actually tests nested-menu output.
    */
   protected function createMenuLink(
     string $menu_name,
     string $title,
     string $uri,
-    ?int $parent = NULL,
-    int $weight = 0,
     bool $hidden = FALSE,
   ): MenuLinkContent {
     $link = MenuLinkContent::create([
       'menu_name' => $menu_name,
       'title' => $title,
       'link' => ['uri' => $uri],
-      'weight' => $weight,
       'enabled' => $hidden ? 0 : 1,
     ]);
     $link->save();
