@@ -4,8 +4,10 @@ namespace Drupal\Tests\custom_components\Unit;
 
 use Drupal\custom_components\TwigExtension;
 use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
@@ -58,6 +60,26 @@ class TwigExtensionTest extends TestCase {
       $this->languageManager,
       $this->stringTranslation,
     );
+
+    // `t()` (used by getTranslation + CountryManager::getStandardList)
+    // builds TranslatableMarkup objects, which reach for the global
+    // \Drupal::translation() service when no explicit translator is
+    // injected — install a container stub so these tests don't fail
+    // with ServiceNotFoundException. Do not remove without rewiring
+    // the affected tests to inject a translator directly.
+    $container = new ContainerBuilder();
+    $container->set('string_translation', $this->stringTranslation);
+    \Drupal::setContainer($container);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    if (\Drupal::hasContainer()) {
+      \Drupal::unsetContainer();
+    }
+    parent::tearDown();
   }
 
   /**
@@ -396,6 +418,82 @@ class TwigExtensionTest extends TestCase {
 
     $result = $this->twigExtension->formatDate('14 March 2024', 'Y-m-d');
     $this->assertSame('2024-03-14', $result);
+  }
+
+  /**
+   * @covers ::getOptionLabel
+   *
+   * Resolves the human-readable label for the selected option key via
+   * the field's `allowed_values` setting.
+   */
+  public function testGetOptionLabelResolvesAllowedValueLabel(): void {
+    $build = new class {
+      public string $value = 'medium';
+
+      public function getFieldDefinition(): object {
+        return new class {
+
+          public function getSetting(string $name): array {
+            return $name === 'allowed_values'
+              ? ['small' => 'Small', 'medium' => 'Medium', 'large' => 'Large']
+              : [];
+          }
+
+        };
+      }
+    };
+
+    $this->assertSame('Medium', $this->twigExtension->getOptionLabel($build));
+  }
+
+  /**
+   * @covers ::getCountryName
+   *
+   * The filter takes an ISO country code and returns the human-readable
+   * name as a TranslatableMarkup (Drupal core's CountryManager seeds the
+   * list with `t()` calls).
+   */
+  public function testGetCountryNameReturnsCountryLabelForKnownCode(): void {
+    $result = $this->twigExtension->getCountryName('CZ');
+
+    $this->assertInstanceOf(TranslatableMarkup::class, $result);
+    $this->assertSame('Czechia', $result->getUntranslatedString());
+  }
+
+  /**
+   * @covers ::getTranslation
+   *
+   * The `__` / `_x` Twig functions build a TranslatableMarkup with the
+   * `context` option populated — verify the wiring without rendering.
+   */
+  public function testGetTranslationBuildsTranslatableMarkupWithContext(): void {
+    $result = $this->twigExtension->getTranslation('Cart', 'commerce');
+
+    $this->assertInstanceOf(TranslatableMarkup::class, $result);
+    $this->assertSame('Cart', $result->getUntranslatedString());
+    $this->assertSame('commerce', $result->getOption('context'));
+  }
+
+  /**
+   * @covers ::getResizer
+   *
+   * Facade for the static Resizer::resizer() — verify it delegates by
+   * passing an SVG image (Resizer's documented passthrough path) and
+   * asserting the single-item list comes back unchanged.
+   */
+  public function testGetResizerDelegatesToResizerStatic(): void {
+    $image = [
+      'src' => '/sites/default/files/icon.svg',
+      'type' => 'image/svg+xml',
+      'width' => 24,
+      'height' => 24,
+    ];
+
+    $result = TwigExtension::getResizer($image);
+
+    $this->assertCount(1, $result);
+    $this->assertSame('/sites/default/files/icon.svg', $result[0]['src']);
+    $this->assertSame('image/svg+xml', $result[0]['type']);
   }
 
 }
