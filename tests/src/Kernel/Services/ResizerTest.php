@@ -227,11 +227,11 @@ class ResizerTest extends ResizerKernelTestBase {
    * Files that exist in public:// AND match the /sites/default/files/
    * URL prefix go through the full image-style derivative path. Every
    * variant-producing test in this class invokes getOutputFormat and
-   * getFocalPointHash transitively; all such tests declare @covers for
-   * them so the credit lands on whichever runs first in PHPUnit's
-   * execution order (PHPUnit does not guarantee a deterministic order
-   * — and getOutputFormat's static-cache early-return means only the
-   * first caller in the process hits the full toolkit-detection body).
+   * getFocalPointHash transitively; the explicit covers entries on all
+   * such tests credit those private helpers regardless of which test
+   * runs first (PHPUnit does not guarantee a deterministic order, and
+   * getOutputFormat's static-cache early-return means only the first
+   * caller in the process hits the full toolkit-detection body).
    */
   public function testLocalFileProducesVariantsViaImageStyle(): void {
     $file = $this->createTestPngFile('local.png');
