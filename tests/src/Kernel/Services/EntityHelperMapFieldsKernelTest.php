@@ -183,10 +183,12 @@ class EntityHelperMapFieldsKernelTest extends EntityHelperFieldsKernelTestBase {
    * @covers ::mapFields
    * @covers ::mapDotNotation
    *
-   * Dot notation — `'extras.label'` extracts the `label` field from each
-   * referenced entity in `extras` (an entity_reference field). The
-   * helper loads the referenced entities, reads the named field from
-   * each, and returns a list keyed by the output key.
+   * Dot notation — `'tags.name'` extracts the `name` field from each
+   * referenced entity in `tags` (an entity_reference field targeting
+   * taxonomy terms). The helper loads the referenced entities, reads
+   * the named field from each, and returns a list under the output
+   * key `items`, where each item carries the inner-config key (`label`)
+   * mapped to the resolved value.
    */
   public function testMapFieldsDotNotationExtractsChildField(): void {
     $term_a = Term::create(['vid' => 'topic', 'name' => 'Alpha']);
