@@ -100,6 +100,8 @@ class ResizerTest extends ResizerKernelTestBase {
    * @covers ::resizer
    * @covers ::addImageEffects
    * @covers ::addCropEffect
+   * @covers ::getFocalPointHash
+   * @covers ::getOutputFormat
    *
    * `image_style: 'crop'` routes through addImageEffects' match into
    * addCropEffect. focal_point isn't in the kernel module list here,
@@ -107,6 +109,12 @@ class ResizerTest extends ResizerKernelTestBase {
    * The focal_point-enabled branch is acceptable to leave uncovered —
    * adding the module would balloon the kernel boot, and the fallback
    * is the safer default the code is designed to handle.
+   *
+   * Crop also exercises the two cross-cutting helpers: getFocalPointHash
+   * is invoked once per local-file variant pass (line 190 in Resizer)
+   * and getOutputFormat is invoked from inside addImageEffects' format-
+   * conversion tail. Crediting them here covers all five private helpers
+   * the #62 audit identified.
    */
   public function testCropVariantBuildsImageScaleAndCropEffect(): void {
     $this->createTestPngFile('crop.png');
