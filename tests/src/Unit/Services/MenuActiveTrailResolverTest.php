@@ -410,6 +410,53 @@ class MenuActiveTrailResolverTest extends TestCase {
   }
 
   /**
+   * @covers ::getActiveTrailIds
+   *
+   * Unrouted breadcrumb crumbs (`!$url->isRouted()` — e.g. external
+   * URLs surfaced by a custom breadcrumb builder) are skipped without
+   * touching the menu link manager; iteration continues to the next
+   * deeper crumb.
+   */
+  public function testSkipsUnroutedBreadcrumbCrumbs(): void {
+    $this->menuActiveTrail
+      ->method('getActiveTrailIds')
+      ->willReturn(['' => '']);
+
+    // Unrouted URL — e.g. an external href surfaced by a custom
+    // breadcrumb builder.
+    $unrouted_url = $this->getMockBuilder(Url::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $unrouted_url->method('isRouted')->willReturn(FALSE);
+
+    $breadcrumb = new Breadcrumb();
+    $breadcrumb->setLinks([
+      $this->makeLink('<front>', []),
+      new Link('External', $unrouted_url),
+      Link::fromTextAndUrl('Parent', $this->makeRoutedUrl('entity.node.canonical', ['node' => '10'])),
+    ]);
+    $this->breadcrumbBuilder->method('build')->willReturn($breadcrumb);
+
+    $this->menuLinkManager
+      ->method('loadLinksByRoute')
+      ->willReturnCallback(function ($route, $params, $menu) {
+        if ($route === 'entity.node.canonical' && ($params['node'] ?? NULL) === '10') {
+          return ['menu_link_content:parent' => $this->makeMenuLink('menu_link_content:parent', '')];
+        }
+        return [];
+      });
+
+    $result = $this->resolver->getActiveTrailIds('main');
+
+    // The unrouted crumb is skipped; iteration continues to Parent and
+    // returns the trail for it.
+    $this->assertSame([
+      '' => '',
+      'menu_link_content:parent' => 'menu_link_content:parent',
+    ], $result);
+  }
+
+  /**
    * Helper: create a Link with a routed Url.
    */
   private function makeLink(string $route_name, array $params): Link {
