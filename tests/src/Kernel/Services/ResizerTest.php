@@ -150,6 +150,8 @@ class ResizerTest extends ResizerKernelTestBase {
    * @covers ::resizer
    * @covers ::addImageEffects
    * @covers ::addSmartCropEffect
+   * @covers ::getOutputFormat
+   * @covers ::getFocalPointHash
    *
    * `image_style: 'smart_crop'` routes through addSmartCropEffect,
    * which adds the image_effects-provided
@@ -181,6 +183,8 @@ class ResizerTest extends ResizerKernelTestBase {
    * @covers ::resizer
    * @covers ::addImageEffects
    * @covers ::addCanvasEffect
+   * @covers ::getOutputFormat
+   * @covers ::getFocalPointHash
    *
    * `image_style: 'canvas'` adds image_scale + image_effects_set_canvas
    * for exact-size letterboxed output.
@@ -217,9 +221,17 @@ class ResizerTest extends ResizerKernelTestBase {
 
   /**
    * @covers ::resizer
+   * @covers ::getOutputFormat
+   * @covers ::getFocalPointHash
    *
    * Files that exist in public:// AND match the /sites/default/files/
-   * URL prefix go through the full image-style derivative path.
+   * URL prefix go through the full image-style derivative path. Every
+   * variant-producing test in this class invokes getOutputFormat and
+   * getFocalPointHash transitively; the explicit covers entries on all
+   * such tests credit those private helpers regardless of which test
+   * runs first (PHPUnit does not guarantee a deterministic order, and
+   * getOutputFormat's static-cache early-return means only the first
+   * caller in the process hits the full toolkit-detection body).
    */
   public function testLocalFileProducesVariantsViaImageStyle(): void {
     $file = $this->createTestPngFile('local.png');
