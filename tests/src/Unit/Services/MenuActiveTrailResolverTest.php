@@ -429,27 +429,32 @@ class MenuActiveTrailResolverTest extends TestCase {
       ->getMock();
     $unrouted_url->method('isRouted')->willReturn(FALSE);
 
+    // The resolver iterates `array_reverse($breadcrumb->getLinks())`,
+    // so the DEEPEST (last-original-position) crumb is inspected first.
+    // To exercise the unrouted-skip branch the unrouted crumb must sit
+    // AFTER the matching Parent — reversed walk hits unrouted first,
+    // skips it, then matches Parent on the next iteration.
     $breadcrumb = new Breadcrumb();
     $breadcrumb->setLinks([
       $this->makeLink('<front>', []),
-      new Link('External', $unrouted_url),
       Link::fromTextAndUrl('Parent', $this->makeRoutedUrl('entity.node.canonical', ['node' => '10'])),
+      new Link('External', $unrouted_url),
     ]);
     $this->breadcrumbBuilder->method('build')->willReturn($breadcrumb);
 
+    // Hard guarantee: the menu link manager must NEVER be asked about
+    // the unrouted crumb (the resolver short-circuits before reaching
+    // it). Only Parent's route should be looked up.
     $this->menuLinkManager
+      ->expects($this->once())
       ->method('loadLinksByRoute')
-      ->willReturnCallback(function ($route, $params, $menu) {
-        if ($route === 'entity.node.canonical' && ($params['node'] ?? NULL) === '10') {
-          return ['menu_link_content:parent' => $this->makeMenuLink('menu_link_content:parent', '')];
-        }
-        return [];
-      });
+      ->with('entity.node.canonical', ['node' => '10'], 'main')
+      ->willReturn(['menu_link_content:parent' => $this->makeMenuLink('menu_link_content:parent', '')]);
 
     $result = $this->resolver->getActiveTrailIds('main');
 
-    // The unrouted crumb is skipped; iteration continues to Parent and
-    // returns the trail for it.
+    // The unrouted crumb was skipped; iteration continued to Parent and
+    // returned its trail.
     $this->assertSame([
       '' => '',
       'menu_link_content:parent' => 'menu_link_content:parent',
