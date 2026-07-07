@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-07-07
+
 ### Added
 - **Drupal coding standards via `drupal/coder` (phpcs)** — new `phpcs.xml.dist` running the `Drupal` + `DrupalPractice` rulesets over `src/`, `tests/` and the module files; `drupal/coder` promoted to an explicit `require-dev` entry; `composer phpcs` / `composer phpcbf` aliases; CI's `composer hygiene` job gains a phpcs step. The initial sweep fixed all 172 pre-existing violations at the source — 82 via `phpcbf`, 90 by hand (property `@var` docblocks, empty/short doc comments filled with real descriptions, comment rewraps to ≤80 chars, missing `@param` definitions, three genuinely-unused variable assignments dropped while keeping their side-effectful calls) — **zero suppressions**, no `phpcs:ignore` anywhere. Full suite (347 tests) and PHPStan level 8 stay green.
 ### Changed
