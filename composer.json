@@ -78,7 +78,7 @@
         }
     },
     "scripts": {
-        "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
+        "phpstan": "vendor/bin/phpstan analyse --no-progress --memory-limit=2G",
         "test": "vendor/bin/phpunit",
         "test:unit": "vendor/bin/phpunit tests/src/Unit",
         "test:kernel": "vendor/bin/phpunit tests/src/Kernel"
