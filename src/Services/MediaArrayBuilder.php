@@ -52,7 +52,7 @@ class MediaArrayBuilder {
    * @param callable|null $image_field_resolver
    *   Optional callback to resolve a referenced media_image field on
    *   the media entity (typically `[$entity_helper, 'getImageField']`).
-   *   When NULL, the field is loaded directly without translation
+   *   When NULL, field_media_image is read directly without translation
    *   handling — fine for the simple case, but EntityHelper passes the
    *   real resolver to preserve i18n behavior.
    */
@@ -66,13 +66,34 @@ class MediaArrayBuilder {
     if ($media->hasField('field_media_image') && !$media->field_media_image->isEmpty()) {
       $video['image'] = $image_field_resolver !== NULL
         ? $image_field_resolver($media, 'media_image')
-        : $this->buildImage($media);
+        : $this->buildImageField($media);
     }
     elseif ($media->thumbnail->entity) {
       $video['image'] = $this->buildFileImage($media->thumbnail->entity);
     }
 
     return $video;
+  }
+
+  /**
+   * Resolve field_media_image into image arrays, without EntityHelper.
+   *
+   * The no-resolver fallback for buildRemoteVideo(). Reads the field's
+   * File references directly — buildImage() cannot be used here because
+   * it reads the media's own source field, which for a remote video is
+   * the oembed URL, not a file ID. Return shape mirrors
+   * EntityHelper::getImageField(): a single item unwraps to its
+   * buildFileImage() array, multiple items return a list of them.
+   */
+  protected function buildImageField(MediaInterface $media): array {
+    $items = [];
+    foreach ($media->get('field_media_image') as $item) {
+      $file = $item->entity;
+      if ($file instanceof FileInterface) {
+        $items[] = $this->buildFileImage($file, '', $item->toArray());
+      }
+    }
+    return count($items) === 1 ? reset($items) : $items;
   }
 
   /**
