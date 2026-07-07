@@ -2097,6 +2097,7 @@ class EntityHelperTest extends TestCase {
 
   /**
    * @covers ::collectCacheMetadata
+   * @covers ::__construct
    */
   public function testCollectCacheMetadataReturnsAndResets(): void {
     // Fresh helper should have empty cache metadata.
