@@ -9,4 +9,3 @@ coverage.xml
 # drupal/core-composer-scaffold generates these at project root during
 # `composer install` (we're a library, not a site project).
 /.editorconfig
-/.gitattributes
