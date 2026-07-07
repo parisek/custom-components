@@ -1,0 +1,23 @@
+# Distribution scope: `composer require parisek/custom-components` ships only
+# what a consumer runs — module files, src/, templates/, composer.json,
+# LICENSE, README.md. Everything development-only is export-ignored so it
+# never lands in consumers' vendor/ trees.
+#
+# This file is tracked (unlike the drupal/core-composer-scaffold-generated
+# .gitattributes it replaces — see extra.drupal-scaffold.file-mapping in
+# composer.json, which disables that generation).
+/.ddev              export-ignore
+/.github            export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/.editorconfig      export-ignore
+/.vscode            export-ignore
+/tests              export-ignore
+/scripts            export-ignore
+/phpunit.xml.dist   export-ignore
+/phpstan.neon       export-ignore
+/phpstan-baseline.neon export-ignore
+/CHANGELOG.md       export-ignore
+/AGENTS.md          export-ignore
+/CLAUDE.md          export-ignore
+/CONTRIBUTING.md    export-ignore
