@@ -66,7 +66,7 @@ Always work test-first. The discipline, not just the coverage:
 
 New behavior that changes rendered output, data shapes, or anything a consumer could be surprised by ships **opt-in, default off** — never on by default. The library stays backwards-compatible; projects opt in.
 
-- **Pattern (consumer-subclassed base classes).** Declare `protected bool $feature_name = FALSE;` on `ComponentBase` / `DisplayBase` (docblock stating *what it changes* and *why it's opt-in*), gate the behavior on it, and cover both branches (off → old behavior, on → new) in the matching kernel test.
+- **Pattern (consumer-subclassed base classes).** Declare `protected bool $feature_name = FALSE;` on `ComponentBase` / `DisplayBase` (no such flag exists yet — this defines the shape for the first one) (docblock stating *what it changes* and *why it's opt-in*), gate the behavior on it, and cover both branches (off → old behavior, on → new) in the matching kernel test.
 - **Pattern (container services).** Services like `EntityHelper` or the builders aren't subclassed by consumers — new behavior there opts in via a `$params` / `$custom_parameters` key (e.g. `['return_format' => 'array']` style), defaulting to the old behavior.
 - **Breaking changes are allowed — but only this way.** A behavior-changing change may land *provided* it's behind such an opt-in and defaults to off, so existing consumers are unaffected until they flip it. No silent behavior changes on upgrade. Removing the old path later is a MAJOR release (see `RELEASING.md` § Public API surface).
 - **Opinionated defaults live downstream.** `drupal-base` and site projects flip the flags in their own subclasses / call sites — that's where Porta Design's best-practice config is expressed, not in the library defaults.
