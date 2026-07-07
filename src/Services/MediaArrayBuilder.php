@@ -19,9 +19,9 @@ use Drupal\media\MediaInterface;
 /**
  * Builds template-consumable arrays from Media and File entities.
  *
- * Extracted from EntityHelper as part of #6 (the third and final
- * builder). EntityHelper's generateMedia* / generateFile* methods are
- * preserved as one-line delegates so consumers see no API change.
+ * Extracted from EntityHelper. Its generateMedia* / generateFile*
+ * methods are preserved as one-line delegates so consumers see no API
+ * change.
  *
  * The remote-video path needs to resolve a referenced media field
  * (Media → media reference → second media's image). EntityHelper's
