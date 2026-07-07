@@ -12,8 +12,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
 /**
  * Builds the menu tree structure consumed by templates.
  *
- * Extracted from EntityHelper as part of #6 to slim EntityHelper into
- * a facade. Public consumers still call EntityHelper::getMenu(); the
+ * Extracted from EntityHelper to slim it into a facade. Public
+ * consumers still call EntityHelper::getMenu(); the
  * facade injects its own formatField() as the optional $field_formatter
  * to keep menu-link-extras enrichment working without recreating the
  * full EntityHelper state inside the builder.

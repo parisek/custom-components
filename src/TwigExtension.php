@@ -405,7 +405,7 @@ class TwigExtension extends AbstractExtension {
    *
    * Direct static call — Resizer is a static utility (no instance state,
    * no constructor deps). The `custom_components.resizer` service entry
-   * was removed in v1.4.0 (#44).
+   * was removed in v1.4.0.
    */
   public static function getResizer($image, ...$variants) {
     return Resizer::resizer($image, $variants);

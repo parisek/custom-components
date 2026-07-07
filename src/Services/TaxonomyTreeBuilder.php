@@ -10,8 +10,8 @@ use Drupal\Core\Language\LanguageManagerInterface;
 /**
  * Builds flat / nested taxonomy term arrays for consumption by templates.
  *
- * Extracted from EntityHelper as part of #6 to slim EntityHelper into a
- * facade. Public consumers continue to call
+ * Extracted from EntityHelper to slim it into a facade. Public
+ * consumers continue to call
  * EntityHelper::getTaxonomy($vocabulary, $params); EntityHelper delegates
  * here and bubbles the cache metadata back into its own accumulator.
  */
