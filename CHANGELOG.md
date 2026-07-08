@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [2.0.0] — 2026-07-08
+
 ### Changed
 - **BREAKING: module machine name renamed `custom_components` → `drupal_kit`** — completes the package rename inside Drupal: module files (`drupal_kit.info.yml` / `.module` / `.install` / `.services.yml`), hook implementations, the PHP namespace (`Drupal\custom_components` → `Drupal\drupal_kit` incl. tests), every service ID (`custom_components.entity_helper` → `drupal_kit.entity_helper`, …), `extra.installer-name`, and the dev symlink target. The module's human-readable name changes from "Component: Global" to "Drupal Kit" with a real description. Consumers moving from a site-local `custom_components` copy uninstall it and `composer require parisek/drupal-kit` + `drush en drupal_kit`; templates and site code referencing the old namespace or service IDs must be updated.
 - **BREAKING: package renamed `parisek/custom-components` → `parisek/drupal-kit`** — the GitHub repository moved to [parisek/drupal-kit](https://github.com/parisek/drupal-kit) (old URLs redirect) and `composer.json` `name` follows, mirroring the WordPress-side `parisek/timber-kit` naming. Existing installs must update their `composer.json` require entry (and, until the package lands on Packagist, the `vcs` repository URL). The Drupal module machine name stays `custom_components` in this change; it is renamed to `drupal_kit` separately before v2.0.0.
