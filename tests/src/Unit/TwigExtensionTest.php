@@ -508,6 +508,59 @@ class TwigExtensionTest extends TestCase {
   }
 
   /**
+   * @covers ::mergeResizer
+   *
+   * Optional per-viewport image: an unfilled image field makes |resizer
+   * return [] — the empty group must be dropped BEFORE the last-group
+   * detection, so the remaining group becomes last and keeps its own
+   * unconditional <img> fallback. Regression: the previous implementation
+   * kept the empty group as "last", filtered the desktop group down to
+   * media-qualified variants and produced a <picture> with no fallback.
+   */
+  public function testMergeResizerDropsEmptyGroupsSoFallbackSurvives(): void {
+    $desktop = [
+      ['src' => 'd-lg.webp', 'media' => '(min-width: 992px)'],
+      ['src' => 'd-fallback.jpg', 'media' => ''],
+      // Resizer appends the original image without any 'media' key.
+      ['src' => 'd-default.jpg'],
+    ];
+
+    $merged = TwigExtension::mergeResizer($desktop, []);
+
+    // Desktop is now the last (and only) group — everything survives,
+    // including both fallback-shaped entries.
+    $this->assertCount(3, $merged);
+    $this->assertSame('d-default.jpg', $merged[2]['src']);
+  }
+
+  /**
+   * @covers ::mergeResizer
+   *
+   * Resizer always sets 'media', using '' for tuples without a breakpoint.
+   * Non-last groups must filter with !empty(), not isset() — otherwise the
+   * desktop fallback-shaped entry (media: '') leaks into the merged set as
+   * an unconditional <source> placed BEFORE the mobile entries, shadowing
+   * the mobile image on every viewport.
+   */
+  public function testMergeResizerFiltersEmptyMediaFromNonLastGroups(): void {
+    $desktop = [
+      ['src' => 'd-lg.webp', 'media' => '(min-width: 992px)'],
+      ['src' => 'd-fallback.jpg', 'media' => ''],
+    ];
+    $mobile = [
+      ['src' => 'm.jpg', 'media' => ''],
+    ];
+
+    $merged = TwigExtension::mergeResizer($desktop, $mobile);
+
+    // Desktop contributes only its media-qualified variant; the mobile
+    // group owns the unconditional fallback.
+    $this->assertCount(2, $merged);
+    $this->assertSame('d-lg.webp', $merged[0]['src']);
+    $this->assertSame('m.jpg', $merged[1]['src']);
+  }
+
+  /**
    * @covers ::getTranslationPlural
    *
    * Verifies the new injected stringTranslation service is called with

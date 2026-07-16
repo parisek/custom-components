@@ -412,16 +412,38 @@ class TwigExtension extends AbstractExtension {
   }
 
   /**
-   * Merge resizer formats.
+   * Merge resizer formats into one multi-source <picture> set.
+   *
+   * Variadic, in viewport order (desktop first, mobile last). Non-last
+   * groups contribute only media-qualified variants; the whole last group
+   * survives, including the unconditional <img> fallback.
+   *
+   * Mirrors timber-kit's StarterBase::twig_merge_resizer() so OPTIONAL
+   * per-viewport images work without template branching:
+   * - Empty groups are dropped first: an unfilled optional image field makes
+   *   Resizer return [], and keeping it as the "last" group would filter the
+   *   remaining group down to media-qualified variants — a <picture> with no
+   *   <img> fallback at all.
+   * - The non-last filter uses !empty() instead of isset(): Resizer sets
+   *   'media' to '' for tuples without a breakpoint (and omits it on the
+   *   appended original), so isset() leaked fallback-shaped desktop entries
+   *   that shadowed the mobile image on every viewport.
    */
   public static function mergeResizer(...$items) {
 
     $images = [];
 
+    // Drop empty groups so array_key_last reflects the real last input.
+    foreach ($items as $key => $item) {
+      if (empty($item)) {
+        unset($items[$key]);
+      }
+    }
+
     foreach ($items as $key => $item) {
       foreach ($item as $image) {
         if ($key !== array_key_last($items)) {
-          if (isset($image['media'])) {
+          if (!empty($image['media'])) {
             $images[] = $image;
           }
         }
